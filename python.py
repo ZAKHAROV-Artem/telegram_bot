@@ -1,12 +1,14 @@
 import telebot
 import random
 import pyowm
+from pyowm.utils.config import get_default_config
+import datetime
 
 from telebot import types
 
 
 # print('В городе ' + place + ' сейчас температура ' + str(temperature) + ' градуса по цельсию')
-
+now = datetime.datetime.now()
 bot = telebot.TeleBot('1028036404:AAEPu7Kxn7galAbMi4mQNyzFoFfaZMe8ceQ')
 place = ''
 randomGame = ''
@@ -31,7 +33,7 @@ def welcome(message):
 
 @bot.message_handler(content_types=['text'])
 def lalala(message):
-	
+
 	if message.chat.type == 'private':
 		if message.text == '🎲0-10':
 			bot.send_message(message.chat.id, str(random.randint(0,10)))
@@ -49,25 +51,32 @@ def lalala(message):
 			bot.send_message(message.chat.id, 'Подпишись пожалуйста )')
 			bot.send_message(message.chat.id, 'https://www.instagram.com/invites/contact/?i=1alkmmd1xv87c&utm_content=333qb43')
 def get_weather(message):
-	try:
-		global place
-		place = message.text
+    try:
+        global place
+        place = message.text
 
-		owm = pyowm.OWM('78ea318e8890258175c1551059981a9d')
-		observation = owm.weather_at_place(place)
-		w = observation.get_weather()
+        config_dict = get_default_config()
+        config_dict['language'] = 'ru'
+        owm = pyowm.OWM('8ed306c1945c866ddbef2a69a4e7a82a', config_dict)
 
-		sunrise_date = weather.sunrise_time(timeformat='date')
-		sunrset_date = weather.sunset_time(timeformat='date')
+        mgr = owm.weather_manager()
+        observation = mgr.weather_at_place(place)
+        w = observation.weather
 
-		wind_speed = w.wind()
+        srd = w.sunrise_time(timeformat='iso')
+        std = w.sunset_time(timeformat='iso')
 
-		status = w.detailed_status 
-		pressure_dict = mgr.weather_at_place(place).observation.pressure
-		temperature = w.get_temperature('celsius')['temp']
-		bot.send_message(message.chat.id, 'В городе ' + str(place) +' '+str(status) + '\n Температура ' + str(temperature) +' ˚C \n Влажность - '+str(w.humidity)+'\n Скорость ветра - '+str(wind_speed['speed'])+' м/с \n Время восхода - '+str(sunrise_date)+'\n Время заката - '+str(sunrset_date)+'')
-	except :
-		bot.send_message(message.chat.id, 'Похоже такого города нет :(')
+
+        wind_speed = w.wind()
+
+
+        status = w.detailed_status
+
+        temperature = w.temperature('celsius')['temp']
+
+        bot.send_message(message.chat.id, 'В городе ' + str(place) +' '+str(status) + '\n Температура ' + str(temperature) +' ˚C \n Влажность - '+str(w.humidity)+'\n Скорость ветра - '+str(wind_speed['speed'])+' м/с \n Время восхода - '+str(srd)+'\n Время заката - '+str(std)+'\n ')
+    except :
+        bot.send_message(message.chat.id, 'Похоже такого города нет :(')
 
 
 # RUN
